@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import subprocess
+import datetime
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -9,7 +10,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 AXION_BASE = Path.home() / "Documents" / "axion-files"
-CUSTOM_USER = "user" # THIS_LINE_IS_WATCHED
+CUSTOM_USER = "no" # THIS_LINE_IS_WATCHED
 
 if not AXION_BASE.exists():
     AXION_BASE.mkdir(parents=True)
@@ -23,7 +24,7 @@ ANSI_BLUE = "\033[38;2;41;110;180m"
 ANSI_RESET = "\033[0m"
 
 BANNER = r""".----------------------------------------------------------------.
-| █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ██╗         █████╗  ██████╗  |
+| █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ██╗         █████╗   ██████╗ |
 |██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗  ██║        ██╔═══██╗██╔════╝ |
 |███████║ ╚███╔╝ ██║██║   ██║██╔██╗ ██║ █████╗ ██║   ██║███████║ |
 |██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╗██║ ╚════╝ ██║   ██║╚════██║ |
@@ -38,11 +39,13 @@ def update_self_username(new_name):
             lines = f.readlines()
         with open(script_path, 'w', encoding='utf-8') as f:
             for line in lines:
-                if "# THIS_LINE_IS_WATCHED" in line:
+                # FIXED: Now checks if the line STARTS with the variable name
+                if line.strip().startswith('CUSTOM_USER = "') and "# THIS_LINE_IS_WATCHED" in line:
                     f.write(f'CUSTOM_USER = "{new_name}" # THIS_LINE_IS_WATCHED\n')
                 else:
                     f.write(line)
-    except: pass
+    except Exception as e: 
+        print(f"Error updating name: {e}")
 
 def restart_script():
     os.system('clear' if os.name == 'posix' else 'cls')
@@ -83,22 +86,24 @@ def python_exec(args):
 
 def show_help():
     print("Available commands:")
-    print("  ls                - list files")
-    print("  cd <dir>          - change directory")
-    print("  mv <src> <dest>   - move/rename")
+    print("  ls                 - list files")
+    print("  cd <dir>           - change directory")
+    print("  mv <src> <dest>    - move/rename")
     print("  rname <src> <dest> - rename")
-    print("  cp <src> <dest>   - copy")
-    print("  cat <file>        - show contents")
-    print("  mkdir <dir>       - create directory")
-    print("  rm <path>         - remove file/dir")
-    print("  mfile <file>      - create empty file")
-    print("  notepad <file>    - edit file in Notepad")
-    print("  python <args>     - run python")
-    print("  myname <user>     - change display user (permanent)")
-    print("  refresh           - restart terminal")
-    print("  clear             - clear screen")
-    print("  help              - show this help")
-    print("  exit, quit        - exit shell")
+    print("  cp <src> <dest>    - copy")
+    print("  cat <file>         - show contents")
+    print("  mkdir <dir>        - create directory")
+    print("  rm <path>          - remove file/dir")
+    print("  mfile <file>       - create empty file")
+    print("  notepad <file>     - edit file in Notepad")
+    print("  python <args>      - run python")
+    print("  time               - print exact time and date")
+    print("  whoami             - print current user")
+    print("  myname <user>      - change display user (permanent)")
+    print("  refresh            - restart terminal")
+    print("  clear              - clear screen")
+    print("  help               - show this help")
+    print("  exit, quit         - exit shell")
 
 def run_line(line):
     global CUSTOM_USER
@@ -122,10 +127,14 @@ def run_line(line):
                 t = current_working_dir/cmd[1]
                 shutil.rmtree(t) if t.is_dir() else t.unlink()
         elif c == "python": python_exec(cmd[1:])
+        elif c == "time": print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        elif c == "whoami": print(CUSTOM_USER)
         elif c == "refresh": restart_script()
         elif c == "help": show_help()
         elif c == "myname":
-            if len(cmd) > 1: CUSTOM_USER = cmd[1]; update_self_username(CUSTOM_USER)
+            if len(cmd) > 1: 
+                CUSTOM_USER = cmd[1]
+                update_self_username(CUSTOM_USER)
         elif c == "clear": os.system('clear' if os.name == 'posix' else 'cls')
         elif c in ["exit", "quit"]: raise SystemExit
         else: print(f"unknown command: {c}")
