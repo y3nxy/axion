@@ -8,7 +8,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-AXION_BASE = Path(r"C:\Users\y3np3\Documents\axion-files")
+AXION_BASE = Path.home() / "Documents" / "axion-files"
 CUSTOM_USER = "user" # THIS_LINE_IS_WATCHED
 
 if not AXION_BASE.exists():
@@ -131,6 +131,7 @@ def run_line(line):
         else: print(f"unknown command: {c}")
 
 def shell():
+    os.system('clear' if os.name == 'posix' else 'cls')
     print(f"{ANSI_RED}{BANNER}{ANSI_RESET}")
     print(f"{ANSI_LINK_RED}Axion File Manager linked to: {AXION_BASE}{ANSI_RESET}")
     while True:
