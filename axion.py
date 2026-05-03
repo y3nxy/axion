@@ -10,7 +10,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 AXION_BASE = Path.home() / "Documents" / "axion-files"
-CUSTOM_USER = "no" # THIS_LINE_IS_WATCHED
+CUSTOM_USER = "user" # THIS_LINE_IS_WATCHED
 
 if not AXION_BASE.exists():
     AXION_BASE.mkdir(parents=True)
