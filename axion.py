@@ -27,7 +27,7 @@ BANNER = r""".----------------------------------------------------------------.
 | █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ██╗         █████╗   ██████╗ |
 |██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗  ██║        ██╔═══██╗██╔════╝ |
 |███████║ ╚███╔╝ ██║██║   ██║██╔██╗ ██║ █████╗ ██║   ██║███████║ |
-|██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╗██║ ╚════╝ ██║   ██║╚════██║ |
+|██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╗██║ ╚════- ██║   ██║╚════██║ |
 |██║  ██║██╔╝ ██╗██║╚██████╔╝██║ ╚████║        ╚██████╔╝███████║ |
 |╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝         ╚═════╝ ╚══════╝ |
 '----------------------------------------------------------------'"""
@@ -39,7 +39,6 @@ def update_self_username(new_name):
             lines = f.readlines()
         with open(script_path, 'w', encoding='utf-8') as f:
             for line in lines:
-                # FIXED: Now checks if the line STARTS with the variable name
                 if line.strip().startswith('CUSTOM_USER = "') and "# THIS_LINE_IS_WATCHED" in line:
                     f.write(f'CUSTOM_USER = "{new_name}" # THIS_LINE_IS_WATCHED\n')
                 else:
@@ -143,6 +142,22 @@ def shell():
     os.system('clear' if os.name == 'posix' else 'cls')
     print(f"{ANSI_RED}{BANNER}{ANSI_RESET}")
     print(f"{ANSI_LINK_RED}Axion File Manager linked to: {AXION_BASE}{ANSI_RESET}")
+
+    # CONFIG.IX AUTO-RUN FEATURE
+    config_file = AXION_BASE / "config.ix"
+    if config_file.exists():
+        try:
+            auto_commands = [l.strip() for l in config_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+            for cmd_line in auto_commands:
+                with open(os.devnull, 'w') as fnull:
+                    old_stdout = sys.stdout
+                    sys.stdout = fnull
+                    try:
+                        run_line(cmd_line)
+                    finally:
+                        sys.stdout = old_stdout
+        except: pass
+
     while True:
         try:
             line = input(get_prompt()).strip()
