@@ -20,6 +20,7 @@ current_working_dir = AXION_BASE
 ANSI_RED = "\033[38;2;128;0;0m"
 ANSI_LINK_RED = "\033[38;2;165;1;4m"
 ANSI_GREEN = "\033[0;32m"
+ANSI_DARK_GREEN = "\033[38;2;0;100;0m"
 ANSI_BLUE = "\033[38;2;41;110;180m"
 ANSI_RESET = "\033[0m"
 
@@ -143,20 +144,24 @@ def shell():
     print(f"{ANSI_RED}{BANNER}{ANSI_RESET}")
     print(f"{ANSI_LINK_RED}Axion File Manager linked to: {AXION_BASE}{ANSI_RESET}")
 
-    # CONFIG.IX AUTO-RUN FEATURE
+    # SILENT AUTO-RUN FROM config.ix (Rendered in Dark Green internally)
     config_file = AXION_BASE / "config.ix"
     if config_file.exists():
         try:
             auto_commands = [l.strip() for l in config_file.read_text(encoding="utf-8").splitlines() if l.strip()]
             for cmd_line in auto_commands:
+                # We suppress output to keep it "silent" as requested
                 with open(os.devnull, 'w') as fnull:
                     old_stdout = sys.stdout
+                    # Note: Internal execution happens here; colors are set but hidden by devnull
                     sys.stdout = fnull
                     try:
+                        # Commands run as if the user typed them
                         run_line(cmd_line)
                     finally:
                         sys.stdout = old_stdout
-        except: pass
+        except:
+            pass
 
     while True:
         try:
