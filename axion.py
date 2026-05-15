@@ -47,7 +47,7 @@ if AXION_BASE_STR == "UNDEFINED":
 else:
     AXION_BASE = Path(AXION_BASE_STR)
 
-CUSTOM_USER = "user"  # THIS_LINE_IS_WATCHED
+CUSTOM_USER = "y3nx"  # THIS_LINE_IS_WATCHED
 current_working_dir = AXION_BASE
 
 ANSI_RED = "\033[38;2;128;0;0m"
@@ -72,26 +72,25 @@ COMMANDS = [
     "help", "myname", "clear", "exit", "quit"
 ]
 
-# --- COMPLETER (commands + files) ---
-def completer(text, state):
-    buffer = readline_buffer.get("")
-
-    try:
-        parts = buffer.split()
-
-        if len(parts) <= 1:
-            matches = [c for c in COMMANDS if c.startswith(text)]
-        else:
-            matches = [
-                p.name + ("/" if p.is_dir() else "")
-                for p in current_working_dir.iterdir()
-                if p.name.startswith(text)
-            ]
-
-        return matches[state]
-
-    except:
-        return None
+def show_help():
+    print("Available commands:")
+    print("  ls                 - list files")
+    print("  cd <dir>           - change directory")
+    print("  mv <src> <dest>    - move/rename")
+    print("  rname <src> <dest> - rename")
+    print("  cp <src> <dest>    - copy")
+    print("  cat <file>         - show contents")
+    print("  mkdir <dir>        - create directory")
+    print("  rm <path>          - remove file/dir")
+    print("  mfile <file>       - create empty file")
+    print("  notepad <file>     - edit file in Notepad")
+    print("  python <args>      - run python")
+    print("  time               - print date/time")
+    print("  whoami             - show user")
+    print("  myname <user>      - change username")
+    print("  clear              - clear screen")
+    print("  help               - show this help")
+    print("  exit / quit        - exit shell")
 
 def update_self_username(new_name):
     try:
@@ -216,6 +215,9 @@ def run_line(line):
                 CUSTOM_USER = cmd[1]
                 update_self_username(CUSTOM_USER)
 
+        elif c == "help":
+            show_help()
+
         elif c in ["exit", "quit"]:
             raise SystemExit
 
@@ -231,7 +233,6 @@ def shell():
     config_file = AXION_BASE / "config.ix"
     config_file.touch(exist_ok=True)
 
-    # auto-run config
     try:
         for cmd_line in config_file.read_text(encoding="utf-8").splitlines():
             if cmd_line.strip():
