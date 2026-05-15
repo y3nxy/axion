@@ -8,23 +8,24 @@ this readme contains everything you need to get this thing running and understan
 ## 🚀 WHAT THIS IS
 
 a python-powered terminal shell that:
-- predicts your commands like it’s reading your mind
-- autocompletes files, folders, and commands
-- runs like a mini OS inside a script
-- remembers your vibe and history
-- lowkey feels like zsh got a cybernetic upgrade
+
+- predicts your commands like it’s reading your mind  
+- autocompletes files, folders, and commands  
+- runs like a mini OS inside a script  
+- remembers your vibe and history  
+- lowkey feels like zsh got a cybernetic upgrade  
 
 ---
 
 ## 🧠 FEATURES
 
-- command autocomplete (tab magic)
-- ghost suggestions (right arrow accept energy)
-- file system navigation baked in
-- custom command runner
-- persistent user identity
-- startup scripting via `config.ix`
-- clean ANSI colored UI
+- command autocomplete (tab magic)  
+- ghost suggestions (right arrow accept energy)  
+- file system navigation baked in  
+- custom command runner  
+- persistent user identity  
+- startup scripting via `config.ix`  
+- clean ANSI colored UI  
 
 ---
 
@@ -78,18 +79,18 @@ python axion.py
 
 put commands inside like:
 
-```
+```bash
 ls
 cd test
 ```
 
-and it just does them instantly like it’s obeying your past self
+and it just executes them instantly like it’s obeying your past self
 
 ---
 
 ## 📁 STRUCTURE
 
-```
+```text
 axion.py
 config.ix
 requirements.txt
@@ -97,19 +98,11 @@ requirements.txt
 
 ---
 
-## 🧩 REQUIREMENTS
+## 💀 FINAL VIBE
+
+this is not a shell
+
+this is a predictive terminal organism that learned your habits and started finishing your thoughts before you do
 
 ```
-prompt_toolkit>=3.0.0
-pyreadline3; sys_platform == "win32"
 ```
-
----
-
-## ⚠️ NOTES
-
-* windows needs pyreadline3 or autocomplete breaks
-* linux/mac just works naturally
-* best experience in modern terminal apps
-
----
