@@ -18,28 +18,21 @@ if hasattr(sys.stdout, "reconfigure"):
 AXION_BASE_STR = "UNDEFINED"  # AXION_ROOT_WATCH
 
 if AXION_BASE_STR == "UNDEFINED":
-    print("\033[0;32m[First Time Setup]\033[0m")
-    choice = input("Enter full path for Axion file system: ").strip()
-
-    if not choice:
-        choice = str(Path.home() / "Documents" / "axion-files")
-
-    AXION_BASE = Path(choice).resolve()
-
-    if not AXION_BASE.exists():
-        AXION_BASE.mkdir(parents=True)
-
+    # Automatically grab the exact folder where this axion.py script lives
+    AXION_BASE = Path(__file__).resolve().parent
+    
     try:
         script_path = Path(__file__).resolve()
         content = script_path.read_text(encoding="utf-8")
 
         new_content = content.replace(
             'AXION_BASE_STR = "UNDEFINED"  # AXION_ROOT_WATCH',
-            f'AXION_BASE_STR = r"{choice}"  # AXION_ROOT_WATCH'
+            f'AXION_BASE_STR = r"{AXION_BASE}"  # AXION_ROOT_WATCH'
         )
 
         script_path.write_text(new_content, encoding="utf-8")
-        print(f"File system planted at: {choice}")
+        print(f"\033[0;32m[First Time Setup]\033[0m")
+        print(f"File system automatically planted at repository root: {AXION_BASE}")
 
     except Exception as e:
         print(f"Error saving path: {e}")
