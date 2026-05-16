@@ -14,37 +14,17 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-AXION_BASE_STR = r"C:\\Users\\y3np3\\axion\\axion-file"  # AXION_ROOT_WATCH
+# Dynamically find the repository root wherever the script is running
+repo_root = Path(__file__).resolve().parent
+AXION_BASE = repo_root / "axion-file"
 
-if AXION_BASE_STR == "UNDEFINED":
-    repo_root = Path(__file__).resolve().parent
-    AXION_BASE = repo_root / "axion-file"
-    
-    if not AXION_BASE.exists():
-        AXION_BASE.mkdir(parents=True, exist_ok=True)
-    
-    try:
-        script_path = Path(__file__).resolve()
-        content = script_path.read_text(encoding="utf-8")
+# Automatically create the sandbox directory if it doesn't exist
+if not AXION_BASE.exists():
+    AXION_BASE.mkdir(parents=True, exist_ok=True)
 
-        safe_path_str = str(AXION_BASE).replace("\\", "\\\\")
-
-        new_content = content.replace(
-            'AXION_BASE_STR = r"C:\\Users\\y3np3\\axion\\axion-file"  # AXION_ROOT_WATCH',
-            f'AXION_BASE_STR = r"{safe_path_str}"  # AXION_ROOT_WATCH'
-        )
-
-        script_path.write_text(new_content, encoding="utf-8")
-        print(f"\033[0;32m[First Time Setup]\033[0m")
-        print(f"File system sandbox automatically isolated at: {AXION_BASE}")
-
-    except Exception as e:
-        print(f"Error saving path: {e}")
-else:
-    AXION_BASE = Path(AXION_BASE_STR).resolve()
-
+# Define and create settings directory
 SETTINGS_DIR = AXION_BASE / "settings"
-SETTINGS_DIR.mkdir(exist_ok=True)
+SETTINGS_DIR.mkdir(parents=True, exist_ok=True)
 
 CONFIG_FILE = SETTINGS_DIR / "config.ix"
 if not CONFIG_FILE.exists():
@@ -72,8 +52,8 @@ ANSI_PURPLE = "\033[38;2;125;83;222m"
 ANSI_RESET = "\033[0m"
 
 BANNER = r""".----------------------------------------------------------------.
-| █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ██╗          █████╗   ██████╗ |
-|██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗  ██║         ██╔═══██╗██╔════╝ |
+| █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ██╗         █████╗   ██████╗ |
+|██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗  ██║        ██╔═══██╗██╔════╝ |
 |███████║ ╚███╔╝ ██║██║   ██║██╔██╗ ██║ █████╗ ██║   ██║███████║ |
 |██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╗██║ ╚════- ██║   ██║╚════██║ |
 |██║  ██║██╔╝ ██╗██║╚██████╔╝██║ ╚████║        ╚██████╔╝███████║ |
@@ -84,28 +64,34 @@ COMMANDS = [
     "ls", "cd", "mv", "rname", "cp", "cat",
     "mkdir", "rm", "mfile", "notepad",
     "python", "time", "whoami", "refresh",
-    "help", "myname", "clear", "exit", "quit"
+    "help", "myname", "clear", "exit", "quit",
+    "newline", "newup", "rplace", "empty", "delline"
 ]
 
 def show_help():
     print("Available commands:")
-    print("  ls                 - list files")
-    print("  cd <dir>           - change directory")
-    print("  mv <src> <dest>    - move/rename")
-    print("  rname <src> <dest> - rename")
-    print("  cp <src> <dest>    - copy")
-    print("  cat <file>         - show contents")
-    print("  mkdir <dir>        - create directory")
-    print("  rm <path>          - remove file/dir")
-    print("  mfile <file>       - create empty file")
-    print("  notepad <file>     - edit file in Notepad")
-    print("  python <args>      - run python")
-    print("  time               - print date/time")
-    print("  whoami             - show user")
-    print("  myname <user>      - change username")
-    print("  clear              - clear screen")
-    print("  help               - show this help")
-    print("  exit / quit        - exit shell")
+    print("  ls                  - list files")
+    print("  cd <dir>            - change directory")
+    print("  mv <src> <dest>     - move/rename")
+    print("  rname <src> <dest>  - rename")
+    print("  cp <src> <dest>     - copy")
+    print("  cat <file>          - show contents")
+    print("  mkdir <dir>         - create directory")
+    print("  rm <path>           - remove file/dir")
+    print("  mfile <file>        - create empty file")
+    print("  notepad <file>      - edit file in Notepad")
+    print("  newline <file> <txt>- append text with a new line")
+    print("  newup <file> <txt>  - append text directly without new line")
+    print("  rplace <file> <txt> - clear file and replace with new text")
+    print("  empty <file>        - clear all contents of a file")
+    print("  delline <file> <ln> - delete a specific line and collapse the gap")
+    print("  python <args>       - run python")
+    print("  time                - print date/time")
+    print("  whoami              - show user")
+    print("  myname <user>       - change username")
+    print("  clear               - clear screen")
+    print("  help                - show this help")
+    print("  exit / quit         - exit shell")
 
 def update_self_username(new_name):
     try:
@@ -187,11 +173,12 @@ def run_line(line):
     global CUSTOM_USER
 
     for parts in line.split("&"):
-        if not parts.strip():
+        raw_part = parts.strip()
+        if not raw_part:
             continue
         
         try:
-            cmd = shlex.split(parts)
+            cmd = shlex.split(raw_part)
         except Exception as e:
             print(f"lexical error: {e}")
             continue
@@ -254,6 +241,80 @@ def run_line(line):
                     subprocess.Popen(["notepad.exe", str(f)]) if os.name == "nt" else print("error: Notepad is only available on Windows")
                 else:
                     print("error: notepad requires a filename")
+
+            elif c == "newline":
+                if len(cmd) > 2:
+                    f = resolve_path(cmd[1])
+                    prefix_len = raw_part.find(cmd[1]) + len(cmd[1])
+                    text_to_append = raw_part[prefix_len:].strip() + "\n"
+                    with open(f, "a", encoding="utf-8") as file_obj:
+                        file_obj.write(text_to_append)
+                else:
+                    print("error: newline requires a filename and a text string")
+
+            elif c == "newup":
+                if len(cmd) > 2:
+                    f = resolve_path(cmd[1])
+                    prefix_len = raw_part.find(cmd[1]) + len(cmd[1])
+                    text_to_append = raw_part[prefix_len:].strip()
+                    with open(f, "a", encoding="utf-8") as file_obj:
+                        file_obj.write(text_to_append)
+                else:
+                    print("error: newup requires a filename and a text string")
+
+            elif c == "rplace":
+                if len(cmd) > 1:
+                    f = resolve_path(cmd[1])
+                    if len(cmd) > 2:
+                        prefix_len = raw_part.find(cmd[1]) + len(cmd[1])
+                        text_to_write = raw_part[prefix_len:].strip()
+                    else:
+                        text_to_write = ""
+                    
+                    with open(f, "w", encoding="utf-8") as file_obj:
+                        file_obj.write(text_to_write)
+                else:
+                    print("error: rplace requires a filename argument")
+
+            elif c == "empty":
+                if len(cmd) > 1:
+                    f = resolve_path(cmd[1])
+                    with open(f, "w", encoding="utf-8") as file_obj:
+                        pass
+                else:
+                    print("error: empty requires a filename target")
+
+            elif c == "delline":
+                if len(cmd) > 2:
+                    f = resolve_path(cmd[1])
+                    try:
+                        line_idx = int(cmd[2]) - 1  # Convert to 0-based indexing
+                        if line_idx < 0:
+                            print("error: Line number must be 1 or greater")
+                            continue
+                    except ValueError:
+                        print("error: Line number must be an integer")
+                        continue
+
+                    if not f.exists():
+                        print(f"error: {cmd[1]} not found")
+                        continue
+
+                    lines = f.read_text(encoding="utf-8").splitlines()
+                    
+                    if line_idx < len(lines):
+                        # Completely remove the element from the line list to collapse the gap
+                        lines.pop(line_idx)
+                        
+                        # Rejoin using standard system newlines. If lines are left, add a trailing newline.
+                        if lines:
+                            f.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                        else:
+                            f.write_text("", encoding="utf-8")
+                    else:
+                        print(f"error: File only has {len(lines)} lines. Line {cmd[2]} doesn't exist.")
+                else:
+                    print("error: delline requires a filename and a line number")
 
             elif c == "rm":
                 if len(cmd) > 1:
@@ -330,7 +391,6 @@ def shell():
                 run_line(line)
 
         except (EOFError, KeyboardInterrupt, SystemExit):
-            # Clear everything completely before returning to the normal terminal layout
             os.system("cls" if os.name == "nt" else "clear")
             break
 
