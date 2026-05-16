@@ -8,44 +8,67 @@ from pathlib import Path
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import NestedCompleter, PathCompleter
 from prompt_toolkit.formatted_text import ANSI
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-AXION_BASE_STR = "UNDEFINED"  # AXION_ROOT_WATCH
+AXION_BASE_STR = r"C:\\Users\\y3np3\\axion\\axion-file"  # AXION_ROOT_WATCH
 
 if AXION_BASE_STR == "UNDEFINED":
-    # Automatically grab the exact folder where this axion.py script lives
-    AXION_BASE = Path(__file__).resolve().parent
+    repo_root = Path(__file__).resolve().parent
+    AXION_BASE = repo_root / "axion-file"
+    
+    if not AXION_BASE.exists():
+        AXION_BASE.mkdir(parents=True, exist_ok=True)
     
     try:
         script_path = Path(__file__).resolve()
         content = script_path.read_text(encoding="utf-8")
 
+        safe_path_str = str(AXION_BASE).replace("\\", "\\\\")
+
         new_content = content.replace(
-            'AXION_BASE_STR = "UNDEFINED"  # AXION_ROOT_WATCH',
-            f'AXION_BASE_STR = r"{AXION_BASE}"  # AXION_ROOT_WATCH'
+            'AXION_BASE_STR = r"C:\\Users\\y3np3\\axion\\axion-file"  # AXION_ROOT_WATCH',
+            f'AXION_BASE_STR = r"{safe_path_str}"  # AXION_ROOT_WATCH'
         )
 
         script_path.write_text(new_content, encoding="utf-8")
         print(f"\033[0;32m[First Time Setup]\033[0m")
-        print(f"File system automatically planted at repository root: {AXION_BASE}")
+        print(f"File system sandbox automatically isolated at: {AXION_BASE}")
 
     except Exception as e:
         print(f"Error saving path: {e}")
 else:
     AXION_BASE = Path(AXION_BASE_STR).resolve()
 
-CUSTOM_USER = "user"  # THIS_LINE_IS_WATCHED
+SETTINGS_DIR = AXION_BASE / "settings"
+SETTINGS_DIR.mkdir(exist_ok=True)
+
+CONFIG_FILE = SETTINGS_DIR / "config.ix"
+if not CONFIG_FILE.exists():
+    CONFIG_FILE.write_text("# This file automatically executes Axion shell commands sequentially on startup.\n", encoding="utf-8")
+
+USERNAME_FILE = SETTINGS_DIR / "username.ix"
+if not USERNAME_FILE.exists():
+    USERNAME_FILE.write_text("user", encoding="utf-8")
+
+try:
+    CUSTOM_USER = USERNAME_FILE.read_text(encoding="utf-8").strip()
+    if not CUSTOM_USER:
+        CUSTOM_USER = "user"
+except Exception:
+    CUSTOM_USER = "user"
+
 current_working_dir = AXION_BASE
 
 ANSI_RED = "\033[38;2;128;0;0m"
 ANSI_LINK_RED = "\033[38;2;165;1;4m"
 ANSI_GREEN = "\033[0;32m"
 ANSI_BLUE = "\033[38;2;41;110;180m"
+ANSI_DARK_BLUE = "\033[38;2;0;0;139m"  
+ANSI_PURPLE = "\033[38;2;125;83;222m"
 ANSI_RESET = "\033[0m"
 
 BANNER = r""".----------------------------------------------------------------.
@@ -86,23 +109,21 @@ def show_help():
 
 def update_self_username(new_name):
     try:
-        script_path = Path(__file__).resolve()
-        lines = script_path.read_text(encoding="utf-8").splitlines(True)
-
-        with script_path.open("w", encoding="utf-8") as f:
-            for line in lines:
-                if line.strip().startswith('CUSTOM_USER = "') and "# THIS_LINE_IS_WATCHED" in line:
-                    f.write(f'CUSTOM_USER = "{new_name}"  # THIS_LINE_IS_WATCHED\n')
-                else:
-                    f.write(line)
+        USERNAME_FILE.write_text(new_name, encoding="utf-8")
     except Exception as e:
-        print(f"Error updating name: {e}")
+        print(f"Error updating username file: {e}")
 
 def restart_script():
     os.system("cls" if os.name == "nt" else "clear")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 def get_prompt():
+    global CUSTOM_USER
+    try:
+        CUSTOM_USER = USERNAME_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        CUSTOM_USER = "user"
+        
     try:
         path_str = str(current_working_dir.relative_to(AXION_BASE)).replace("\\", "/")
         display_user = CUSTOM_USER if path_str == "." else f"{CUSTOM_USER}/{path_str}"
@@ -126,7 +147,14 @@ def ls():
     try:
         for item in sorted(os.listdir(current_working_dir)):
             p = current_working_dir / item
-            print(f"{ANSI_BLUE}{item}{ANSI_RESET}" if p.is_dir() else item)
+            if item == "settings":
+                print(f"{ANSI_PURPLE}{item}{ANSI_RESET}")
+            elif p.is_dir():
+                print(f"{ANSI_BLUE}{item}{ANSI_RESET}")
+            elif item in ["config.ix", "username.ix"]:
+                print(f"{ANSI_DARK_BLUE}{item}{ANSI_RESET}")
+            else:
+                print(item)
     except Exception as e:
         print(f"error: {e}")
 
@@ -244,6 +272,10 @@ def run_line(line):
                 print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             elif c == "whoami":
+                try:
+                    CUSTOM_USER = USERNAME_FILE.read_text(encoding="utf-8").strip()
+                except Exception:
+                    pass
                 print(CUSTOM_USER)
 
             elif c == "refresh":
@@ -279,52 +311,27 @@ def shell():
     print(f"{ANSI_RED}{BANNER}{ANSI_RESET}")
     print(f"{ANSI_LINK_RED}All credits to @y3nxy in GitHub.{ANSI_RESET}")
 
-    config_file = AXION_BASE / "config.ix"
     try:
-        config_file.touch(exist_ok=True)
-        for cmd_line in config_file.read_text(encoding="utf-8").splitlines():
-            if cmd_line.strip():
+        for cmd_line in CONFIG_FILE.read_text(encoding="utf-8").splitlines():
+            if cmd_line.strip() and not cmd_line.strip().startswith("#"):
                 run_line(cmd_line)
     except Exception as e:
         print(f"Error loading config.ix: {e}")
 
     session = PromptSession(auto_suggest=AutoSuggestFromHistory())
 
-    completer_obj = NestedCompleter.from_nested_dict({
-        "ls": None,
-        "cd": PathCompleter(),
-        "mv": PathCompleter(),
-        "rname": PathCompleter(),
-        "cp": PathCompleter(),
-        "cat": PathCompleter(),
-        "mkdir": None,
-        "rm": PathCompleter(),
-        "mfile": None,
-        "notepad": PathCompleter(),
-        "python": PathCompleter(),
-        "time": None,
-        "whoami": None,
-        "refresh": None,
-        "help": None,
-        "myname": None,
-        "clear": None,
-        "exit": None,
-        "quit": None,
-    })
-
     while True:
         try:
             line = session.prompt(
-                ANSI(get_prompt()),
-                completer=completer_obj,
-                complete_while_typing=True
+                ANSI(get_prompt())
             ).strip()
 
             if line:
                 run_line(line)
 
         except (EOFError, KeyboardInterrupt, SystemExit):
-            print("\nExiting Axion OS Shell.")
+            # Clear everything completely before returning to the normal terminal layout
+            os.system("cls" if os.name == "nt" else "clear")
             break
 
 if __name__ == "__main__":
